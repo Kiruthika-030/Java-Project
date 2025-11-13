@@ -1,0 +1,134 @@
+import java.util.*;
+
+// Vehicle Class
+class Vehicle {
+    String number;
+    String type;
+
+    Vehicle(String number, String type) {
+        this.number = number;
+        this.type = type;
+    }
+}
+
+// Slot Class
+class Slot {
+    int id;
+    String allowedType;
+    boolean free = true;
+    Vehicle parked;
+
+    Slot(int id, String allowedType) {
+        this.id = id;
+        this.allowedType = allowedType;
+    }
+
+    boolean canPark(String type) {
+        return free && allowedType.equals(type);
+    }
+
+    void park(Vehicle v) {
+        parked = v;
+        free = false;
+    }
+
+    void remove() {
+        parked = null;
+        free = true;
+    }
+}
+
+// Floor Class
+class Floor {
+    int id;
+    ArrayList<Slot> slots = new ArrayList<>();
+
+    Floor(int id, int count) {
+        this.id = id;
+        for (int i = 1; i <= count; i++) {
+            String type = (i % 2 == 0) ? "car" : "bike";
+            slots.add(new Slot(i, type));
+        }
+    }
+
+    Slot findAvailableSlot(String type) {
+        for (Slot s : slots)
+            if (s.canPark(type)) return s;
+        return null;
+    }
+
+    void display() {
+        System.out.println("Floor " + id);
+        for (Slot s : slots) {
+            if (s.free) System.out.println("Slot " + s.id + " (" + s.allowedType + ") - Free");
+            else System.out.println("Slot " + s.id + " - Occupied by " + s.parked.number);
+        }
+    }
+}
+
+// ParkingLot Class
+class ParkingLot {
+    ArrayList<Floor> floors = new ArrayList<>();
+
+    ParkingLot(int f, int s) {
+        for (int i = 1; i <= f; i++)
+            floors.add(new Floor(i, s));
+    }
+
+    void parkVehicle(String num, String type) {
+        Vehicle v = new Vehicle(num, type);
+        for (Floor f : floors) {
+            Slot s = f.findAvailableSlot(type);
+            if (s != null) {
+                s.park(v);
+                System.out.println("Parked at Floor " + f.id + ", Slot " + s.id);
+                return;
+            }
+        }
+        System.out.println("No available slot.");
+    }
+
+    void removeVehicle(String num) {
+        for (Floor f : floors) {
+            for (Slot s : f.slots) {
+                if (!s.free && s.parked.number.equals(num)) {
+                    s.remove();
+                    System.out.println("Removed from Floor " + f.id + ", Slot " + s.id);
+                    return;
+                }
+            }
+        }
+        System.out.println("Vehicle not found.");
+    }
+
+    void display() {
+        for (Floor f : floors) f.display();
+    }
+}
+
+// Main Class
+public class ParkingLotProject {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        ParkingLot lot = new ParkingLot(3, 6);
+
+        while (true) {
+            System.out.println("\n1. Park Vehicle\n2. Remove Vehicle\n3. Display Status\n4. Exit");
+            int ch = sc.nextInt();
+            sc.nextLine();
+
+            if (ch == 1) {
+                System.out.print("Enter vehicle number: ");
+                String num = sc.nextLine();
+                System.out.print("Enter type (car/bike): ");
+                String type = sc.nextLine();
+                lot.parkVehicle(num, type);
+            } else if (ch == 2) {
+                System.out.print("Enter vehicle number: ");
+                lot.removeVehicle(sc.nextLine());
+            } else if (ch == 3) {
+                lot.display();
+            } else break;
+        }
+    }
+}
