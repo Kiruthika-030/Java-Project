@@ -1,0 +1,114 @@
+import java.util.*;
+
+// Question Class
+class Question {
+    String text;
+    String[] options;
+    char correct;
+
+    Question(String text, String[] options, char correct) {
+        this.text = text;
+        this.options = options;
+        this.correct = correct;
+    }
+}
+
+// Timer Thread Class
+class ExamTimer extends Thread {
+    int timeLeft;
+    boolean timeUp = false;
+
+    ExamTimer(int seconds) {
+        this.timeLeft = seconds;
+    }
+
+    public void run() {
+        try {
+            while (timeLeft > 0) {
+                Thread.sleep(1000);
+                timeLeft--;
+            }
+        } catch (InterruptedException e) {}
+        timeUp = true;
+    }
+}
+
+// Exam Class
+class Exam {
+    Question[] questions;
+    char[] userAnswers;
+    int score = 0;
+
+    Exam(Question[] q) {
+        questions = q;
+        userAnswers = new char[q.length];
+    }
+
+    void conductExam() {
+        Scanner sc = new Scanner(System.in);
+        ExamTimer timer = new ExamTimer(25);
+        timer.start();
+
+        System.out.println("=== ONLINE EXAM STARTED ===");
+        System.out.println("Total Time: 25 seconds");
+        
+        for (int i = 0; i < questions.length; i++) {
+            if (timer.timeUp) {
+                System.out.println("\nTime is up. Auto-submitting answers.");
+                break;
+            }
+
+            System.out.println("\nTime Left: " + timer.timeLeft + " seconds");
+            System.out.println((i + 1) + ". " + questions[i].text);
+
+            for (String opt : questions[i].options)
+                System.out.println(opt);
+
+            System.out.print("Your Answer: ");
+            char ans = sc.next().toUpperCase().charAt(0);
+
+            if (timer.timeUp)
+                break;
+
+            userAnswers[i] = ans;
+        }
+
+        evaluate();
+    }
+
+    void evaluate() {
+        for (int i = 0; i < questions.length; i++) {
+            if (userAnswers[i] == questions[i].correct)
+                score++;
+        }
+
+        System.out.println("\n=== EXAM FINISHED ===");
+        System.out.println("Total Questions: " + questions.length);
+        System.out.println("Correct Answers: " + score);
+        System.out.println("Wrong Answers: " + (questions.length - score));
+
+        if (score == questions.length)
+            System.out.println("Excellent Performance");
+        else if (score >= questions.length / 2)
+            System.out.println("Good Performance");
+        else
+            System.out.println("Needs Improvement");
+    }
+}
+
+// Main Class
+public class OnlineExamSystem {
+    public static void main(String[] args) {
+        Question[] q = {
+            new Question("Which language is platform independent?",
+                new String[]{"A. C", "B. C++", "C. Java", "D. Assembly"}, 'C'),
+            new Question("Which keyword is used for inheritance?",
+                new String[]{"A. this", "B. extends", "C. super", "D. import"}, 'B'),
+            new Question("Which collection avoids duplicates?",
+                new String[]{"A. List", "B. Set", "C. Map", "D. Queue"}, 'B')
+        };
+
+        Exam exam = new Exam(q);
+        exam.conductExam();
+    }
+}
